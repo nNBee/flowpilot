@@ -17,10 +17,18 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "fastify": "^5.12.5"
+    "@flowpilot/db": "workspace:*",
+    "dotenv": "^18.0.1",
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.12.5",
+    "fastify-plugin": "^6.0.0",
+    "pg": "^8.23.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1"

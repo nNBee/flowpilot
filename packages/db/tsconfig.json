@@ -6,9 +6,10 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "declaration": true,
     "outDir": "dist",
     "rootDir": "src",
     "noUncheckedIndexedAccess": true
   },
-  "include": ["src", "config.ts"]
+  "include": ["src"]
 }

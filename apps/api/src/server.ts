@@ -1,4 +1,5 @@
 import { buildApp } from './app.js';
+import { config } from './config.js';
 
 const app = buildApp();
 
@@ -19,8 +20,8 @@ process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
 try {
   await app.listen({
-    port: 3000,
-    host: '0.0.0.0',
+    port: config.PORT,
+    host: config.HOST,
   });
 } catch (error) {
   app.log.error(error);
