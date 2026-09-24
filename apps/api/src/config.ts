@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 import { z } from 'zod';
 
 const envSchema = z.object({
@@ -14,11 +12,18 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
 });
 
-const parsedEnv = envSchema.safeParse(process.env);
+export function parseConfig(env: NodeJS.ProcessEnv) {
+  const parsedEnv = envSchema.safeParse(env);
 
-if (!parsedEnv.success) {
-  console.error('Invalid environment variables:', parsedEnv.error.flatten());
-  process.exit(1);
+  if (!parsedEnv.success) {
+    throw new Error(
+      `Invalid environment variables: ${JSON.stringify(
+        parsedEnv.error.flatten(),
+      )}`,
+    );
+  }
+
+  return parsedEnv.data;
 }
 
-export const config = parsedEnv.data;
+export type Config = ReturnType<typeof parseConfig>;

@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest';
+import fp from 'fastify-plugin';
 
 import { buildApp } from './app.js';
 
 describe('health endpoint', () => {
   it('returns ok', async () => {
-    const app = buildApp();
+    const fakeDatabasePlugin = fp(async (app) => {
+      app.decorate('db', {} as never);
+    });
+
+    const app = buildApp({
+      config: {
+        NODE_ENV: 'test',
+        HOST: '127.0.0.1',
+        PORT: 3000,
+        DATABASE_URL: 'postgres://test',
+      },
+      databasePlugin: fakeDatabasePlugin,
+    });
 
     const response = await app.inject({
       method: 'GET',

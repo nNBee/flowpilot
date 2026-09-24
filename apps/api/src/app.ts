@@ -1,16 +1,24 @@
-import Fastify from 'fastify';
-import databasePlugin from './plugins/database.js';
+import Fastify, { type FastifyPluginAsync } from 'fastify';
 import { sql } from 'drizzle-orm';
+import { databasePlugin } from './plugins/database.js';
+import type { Config } from './config.js';
 
-export function buildApp() {
+type BuildAppOptions = {
+  config: Config;
+  databasePlugin?: FastifyPluginAsync;
+};
+
+export function buildApp({
+  config,
+  databasePlugin: databasePluginOverride,
+}: BuildAppOptions) {
   const app = Fastify({
     logger: true,
   });
 
-  app.register(databasePlugin);
+  app.register(databasePluginOverride ?? databasePlugin(config.DATABASE_URL));
 
   app.get('/health', async () => {
-    app.db;
     return {
       status: 'ok',
     };

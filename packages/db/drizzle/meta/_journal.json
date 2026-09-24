@@ -8,6 +8,20 @@
       "when": 1790168678579,
       "tag": "0000_third_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790240484608,
+      "tag": "0001_add_updated_at_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790242914613,
+      "tag": "0002_rename_updated_at_function",
+      "breakpoints": true
     }
   ]
 }

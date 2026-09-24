@@ -1,7 +1,21 @@
+import { config as loadEnv } from 'dotenv';
 import { buildApp } from './app.js';
-import { config } from './config.js';
+import { parseConfig } from './config.js';
 
-const app = buildApp();
+loadEnv({
+  path: new URL('../../../.env', import.meta.url),
+});
+
+let config;
+
+try {
+  config = parseConfig(process.env);
+} catch (error) {
+  console.error('Error parsing config:', error);
+  process.exit(1);
+}
+
+const app = buildApp({ config });
 
 const shutdown = async (signal: string) => {
   app.log.info({ signal }, 'Shutting down');

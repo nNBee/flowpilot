@@ -10,5 +10,5 @@
     "rootDir": "src",
     "noUncheckedIndexedAccess": true
   },
-  "include": ["src", "config.ts"]
+  "include": ["src"]
 }
