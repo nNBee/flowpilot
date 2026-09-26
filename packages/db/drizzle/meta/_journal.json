@@ -22,6 +22,55 @@
       "when": 1790242914613,
       "tag": "0002_rename_updated_at_function",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790255765812,
+      "tag": "0003_curvy_dark_phoenix",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790255896755,
+      "tag": "0004_add_app_user_updated_at_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790272987266,
+      "tag": "0005_swift_silver_centurion",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790279239683,
+      "tag": "0006_glossy_iron_lad",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790279316250,
+      "tag": "0007_calm_dazzler",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790367276788,
+      "tag": "0008_deep_tusk",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790367450110,
+      "tag": "0009_add_invitation_updated_at_trigger",
+      "breakpoints": true
     }
   ]
 }
