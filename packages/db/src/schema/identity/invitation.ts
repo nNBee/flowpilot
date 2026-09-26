@@ -1,5 +1,7 @@
 import {
+  check,
   foreignKey,
+  index,
   pgTable,
   text,
   timestamp,
@@ -67,7 +69,27 @@ export const invitation = pgTable(
     }),
 
     uniqueIndex('invitation_active_business_email_unique')
-      .on(table.businessId, table.email)
+      .on(table.businessId, sql`lower(btrim(${table.email}))`)
       .where(sql`${table.acceptedAt} IS NULL AND ${table.revokedAt} IS NULL`),
+
+    index('invitation_business_id_role_id_idx').on(
+      table.businessId,
+      table.roleId,
+    ),
+
+    check(
+      'invitation_not_accepted_and_revoked',
+      sql`NOT (${table.acceptedAt} IS NOT NULL AND ${table.revokedAt} IS NOT NULL)`,
+    ),
+
+    check(
+      'invitation_accepted_user_requires_accepted_at',
+      sql`${table.acceptedByUserId} IS NULL OR ${table.acceptedAt} IS NOT NULL`,
+    ),
+
+    check(
+      'invitation_expires_after_created',
+      sql`${table.expiresAt} > ${table.createdAt}`,
+    ),
   ],
 );

@@ -1,0 +1,2 @@
+DROP INDEX "invitation_active_business_email_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "invitation_active_business_email_unique" ON "invitation" USING btree ("business_id",lower(btrim("email"))) WHERE "invitation"."accepted_at" IS NULL AND "invitation"."revoked_at" IS NULL;

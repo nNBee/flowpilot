@@ -71,6 +71,27 @@
       "when": 1790367450110,
       "tag": "0009_add_invitation_updated_at_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790414344785,
+      "tag": "0010_wonderful_cobalt_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790415347261,
+      "tag": "0011_free_trauma",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790415543195,
+      "tag": "0012_normal_radioactive_man",
+      "breakpoints": true
     }
   ]
 }

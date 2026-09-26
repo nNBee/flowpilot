@@ -1,4 +1,4 @@
-import { pgTable, foreignKey, unique, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, foreignKey, index, unique, uuid } from 'drizzle-orm/pg-core';
 
 import { appUser } from './app-user.js';
 import { business } from '../business/business.js';
@@ -31,5 +31,10 @@ export const membership = pgTable(
       foreignColumns: [role.businessId, role.id],
       name: 'membership_business_id_role_id_role_fk',
     }),
+
+    index('membership_business_id_role_id_idx').on(
+      table.businessId,
+      table.roleId,
+    ),
   ],
 );

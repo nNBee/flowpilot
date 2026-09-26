@@ -1,0 +1,3 @@
+ALTER TABLE "invitation" ADD CONSTRAINT "invitation_not_accepted_and_revoked" CHECK (NOT ("invitation"."accepted_at" IS NOT NULL AND "invitation"."revoked_at" IS NOT NULL));--> statement-breakpoint
+ALTER TABLE "invitation" ADD CONSTRAINT "invitation_accepted_user_requires_accepted_at" CHECK ("invitation"."accepted_by_user_id" IS NULL OR "invitation"."accepted_at" IS NOT NULL);--> statement-breakpoint
+ALTER TABLE "invitation" ADD CONSTRAINT "invitation_expires_after_created" CHECK ("invitation"."expires_at" > "invitation"."created_at");
