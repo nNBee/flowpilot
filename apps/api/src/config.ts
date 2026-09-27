@@ -4,12 +4,13 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),
-
   HOST: z.string().default('0.0.0.0'),
-
   PORT: z.coerce.number().int().positive().default(3000),
 
   DATABASE_URL: z.string().min(1),
+
+  SUPABASE_URL: z.url(),
+  SUPABASE_SECRET_KEY: z.string().min(1),
 });
 
 export function parseConfig(env: NodeJS.ProcessEnv) {
