@@ -7,6 +7,7 @@ import supabasePlugin, {
 import authPlugin from './plugins/auth.js';
 import type { Config } from './config.js';
 import membershipContextPlugin from './plugins/membership-context.js';
+import { routes } from './routes/index.js';
 type BuildAppOptions = {
   config: Config;
   databasePlugin?: FastifyPluginAsync;
@@ -28,6 +29,8 @@ export function buildApp({
   });
   app.register(authPlugin);
   app.register(membershipContextPlugin);
+
+  app.register(routes);
 
   app.get('/health', async () => {
     return {

@@ -1,5 +1,5 @@
 import Fastify, { type FastifyPluginAsync } from 'fastify';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import fp from 'fastify-plugin';
 import authPlugin from './auth.js';
 
@@ -11,19 +11,21 @@ const fakeUser = {
 function createFakeSupabasePlugin({
   user = fakeUser,
   error = null,
+  getUser = vi.fn(async () => ({
+    data: {
+      user,
+    },
+    error,
+  })),
 }: {
   user?: typeof fakeUser | null;
   error?: Error | null;
+  getUser?: ReturnType<typeof vi.fn>;
 } = {}): FastifyPluginAsync {
   return fp(async (app) => {
     app.decorate('supabase', {
       auth: {
-        getUser: async () => ({
-          data: {
-            user,
-          },
-          error,
-        }),
+        getUser,
       },
     } as never);
   });
@@ -102,6 +104,37 @@ describe('authPlugin', () => {
     expect(response.json()).toEqual({
       userId: 'user-123',
     });
+
+    await app.close();
+  });
+
+  it('passes the exact bearer token to Supabase', async () => {
+    const getUser = vi.fn(async () => ({
+      data: {
+        user: fakeUser,
+      },
+      error: null,
+    }));
+
+    const supabasePlugin: FastifyPluginAsync = fp(async (app) => {
+      app.decorate('supabase', {
+        auth: {
+          getUser,
+        },
+      } as never);
+    });
+
+    const app = await buildTestApp(supabasePlugin);
+
+    await app.inject({
+      method: 'GET',
+      url: '/protected-test',
+      headers: {
+        authorization: 'Bearer exact-token',
+      },
+    });
+
+    expect(getUser).toHaveBeenCalledWith('exact-token');
 
     await app.close();
   });

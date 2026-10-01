@@ -6,6 +6,7 @@ export function createSupabaseAdminClient(config: Config) {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
+      detectSessionInUrl: false,
     },
   });
 }

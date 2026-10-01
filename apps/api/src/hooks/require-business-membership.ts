@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { findMembership } from '../services/identity/membership-service.js';
+import { businessParamsSchema } from '@flowpilot/schemas';
 
 export async function requireBusinessMembership(
   request: FastifyRequest,
@@ -12,20 +13,20 @@ export async function requireBusinessMembership(
     });
   }
 
-  const params = request.params as {
-    businessId?: string;
-  };
+  const paramsResult = businessParamsSchema.safeParse(request.params);
 
-  if (!params.businessId) {
+  if (!paramsResult.success) {
     return reply.code(400).send({
       error: 'Invalid request',
     });
   }
 
+  const { businessId } = paramsResult.data;
+
   const membership = await findMembership(
     request.server.db,
     request.user.id,
-    params.businessId,
+    businessId,
   );
 
   if (!membership) {

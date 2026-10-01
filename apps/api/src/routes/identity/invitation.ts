@@ -56,17 +56,31 @@ export const invitationRoute: FastifyPluginAsync<
       const result = await createInvitationFn({
         db: app.db,
         supabase: app.supabase,
+        inviterRoleId: request.membership!.roleId,
         businessId,
         roleId,
         email,
         invitedByUserId: request.user!.id,
+        logger: request.log,
       });
 
       if (!result.ok) {
-        if (result.reason === 'role_not_found') {
-          return reply.code(400).send({
-            error: 'Invalid role',
-          });
+        switch (result.reason) {
+          case 'role_not_found':
+            return reply.code(400).send({
+              error: 'Invalid role',
+            });
+
+          case 'inviter_role_not_found':
+          case 'role_not_assignable':
+            return reply.code(403).send({
+              error: 'Forbidden',
+            });
+
+          case 'invitation_already_exists':
+            return reply.code(409).send({
+              error: 'Invitation already exists',
+            });
         }
       }
 
