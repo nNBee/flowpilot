@@ -1,33 +1,18 @@
 # FlowPilot – Codex Instructions
 
-Before making architectural or product-level changes, read:
-
-- `docs/product-spec.md`
-
-This document is the primary source of truth for:
-
-- product scope
-- architecture
-- technology choices
-- MVP boundaries
-- established product and engineering decisions
-
 ## Working principles
 
 - Build FlowPilot as a real product first, not as a technology showcase.
 - Prefer simple, production-sensible solutions over clever abstractions.
 - Keep changes focused and incremental.
 - Do not introduce infrastructure, libraries, abstractions, or patterns without a concrete product need.
-- Do not silently contradict established decisions in `docs/product-spec.md`.
 - If a change appears beneficial, explain the trade-off before changing direction.
 
 ## Architecture rules
 
 - FlowPilot is a modular monolith unless a real need emerges to split it.
 - Multi-tenancy and tenant isolation are foundational security concerns.
-- New customer onboarding should trend toward configuration, not customer-specific code.
 - Core business entities should remain strongly typed and relational.
-- Business-specific variation should use configurable custom fields.
 - Keep frontend, API, and worker responsibilities clear.
 - Supabase is infrastructure; core business logic belongs in the Fastify application.
 
@@ -67,9 +52,3 @@ Once tooling exists:
 - add tests for tenant-isolation boundaries
 
 Do not over-test implementation details.
-
-## Documentation
-
-When an implementation decision changes an established product or architectural decision, update `docs/product-spec.md` in the same change.
-
-Do not turn `AGENTS.md` into a full project manual. Keep detailed product and architecture documentation in `docs/`.
