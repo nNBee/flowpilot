@@ -1,5 +1,5 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
-import { invitation, role } from '@flowpilot/db';
+import { and, eq, gt, isNull, sql } from 'drizzle-orm';
+import { invitation, role, appUser, membership } from '@flowpilot/db';
 
 import type { Database } from '@flowpilot/db';
 import type { SupabaseAdminClient } from '../../lib/supabase-admin.js';
@@ -30,6 +30,29 @@ type CreateInvitationParams = {
   invitedByUserId: string;
   logger?: Logger;
 };
+
+type AcceptInvitationParams = {
+  db: Database;
+  invitationId: string;
+  userId: string;
+  userEmail: string;
+  firstName: string;
+  lastName: string;
+};
+
+class InvitationNoLongerAvailableError extends Error {
+  constructor() {
+    super('Invitation is no longer available');
+    this.name = 'InvitationNoLongerAvailableError';
+  }
+}
+
+class UserAlreadyMemberError extends Error {
+  constructor() {
+    super('User is already a member of this business');
+    this.name = 'UserAlreadyMemberError';
+  }
+}
 
 export async function createInvitation({
   db,
@@ -93,6 +116,27 @@ export async function createInvitation({
     return {
       ok: false as const,
       reason: 'role_not_assignable' as const,
+    };
+  }
+
+  const [existingMembership] = await db
+    .select({
+      id: membership.id,
+    })
+    .from(membership)
+    .innerJoin(appUser, eq(appUser.id, membership.userId))
+    .where(
+      and(
+        eq(membership.businessId, businessId),
+        eq(appUser.email, normalizedEmail),
+      ),
+    )
+    .limit(1);
+
+  if (existingMembership) {
+    return {
+      ok: false as const,
+      reason: 'user_already_member' as const,
     };
   }
 
@@ -186,4 +230,156 @@ export async function createInvitation({
 
     throw error;
   }
+}
+
+export async function acceptInvitation({
+  db,
+  invitationId,
+  userId,
+  userEmail,
+  firstName,
+  lastName,
+}: AcceptInvitationParams) {
+  const [existingInvitation] = await db
+    .select({
+      id: invitation.id,
+      businessId: invitation.businessId,
+      email: invitation.email,
+      roleId: invitation.roleId,
+      expiresAt: invitation.expiresAt,
+      acceptedAt: invitation.acceptedAt,
+      revokedAt: invitation.revokedAt,
+    })
+    .from(invitation)
+    .where(eq(invitation.id, invitationId))
+    .limit(1);
+
+  if (!existingInvitation) {
+    return {
+      ok: false as const,
+      reason: 'invitation_not_found' as const,
+    };
+  }
+
+  if (existingInvitation.revokedAt) {
+    return {
+      ok: false as const,
+      reason: 'invitation_revoked' as const,
+    };
+  }
+
+  if (existingInvitation.acceptedAt) {
+    return {
+      ok: false as const,
+      reason: 'invitation_already_accepted' as const,
+    };
+  }
+
+  if (existingInvitation.expiresAt <= new Date()) {
+    return {
+      ok: false as const,
+      reason: 'invitation_expired' as const,
+    };
+  }
+
+  const normalizedUserEmail = userEmail.trim().toLowerCase();
+
+  if (existingInvitation.email.trim().toLowerCase() !== normalizedUserEmail) {
+    return {
+      ok: false as const,
+      reason: 'invitation_email_mismatch' as const,
+    };
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      const acceptedAt = new Date();
+
+      await tx
+        .insert(appUser)
+        .values({
+          id: userId,
+          email: normalizedUserEmail,
+          firstName,
+          lastName,
+        })
+        .onConflictDoNothing();
+
+      const [existingMembership] = await tx
+        .select({
+          id: membership.id,
+        })
+        .from(membership)
+        .where(
+          and(
+            eq(membership.userId, userId),
+            eq(membership.businessId, existingInvitation.businessId),
+          ),
+        )
+        .limit(1);
+
+      if (existingMembership) {
+        throw new UserAlreadyMemberError();
+      }
+
+      const [acceptedInvitation] = await tx
+        .update(invitation)
+        .set({
+          acceptedAt,
+          acceptedByUserId: userId,
+        })
+        .where(
+          and(
+            eq(invitation.id, existingInvitation.id),
+            isNull(invitation.acceptedAt),
+            isNull(invitation.revokedAt),
+            gt(invitation.expiresAt, acceptedAt),
+          ),
+        )
+        .returning({
+          id: invitation.id,
+        });
+
+      if (!acceptedInvitation) {
+        throw new InvitationNoLongerAvailableError();
+      }
+
+      await tx.insert(membership).values({
+        userId,
+        businessId: existingInvitation.businessId,
+        roleId: existingInvitation.roleId,
+      });
+    });
+  } catch (error) {
+    if (error instanceof InvitationNoLongerAvailableError) {
+      return {
+        ok: false as const,
+        reason: 'invitation_no_longer_available' as const,
+      };
+    }
+
+    if (error instanceof UserAlreadyMemberError) {
+      return {
+        ok: false as const,
+        reason: 'user_already_member' as const,
+      };
+    }
+
+    if (
+      isPgError(error) &&
+      error.code === '23505' &&
+      error.constraint === 'membership_user_id_business_id_unique'
+    ) {
+      return {
+        ok: false as const,
+        reason: 'user_already_member' as const,
+      };
+    }
+
+    throw error;
+  }
+
+  return {
+    ok: true as const,
+  };
 }

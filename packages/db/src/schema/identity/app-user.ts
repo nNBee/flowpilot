@@ -10,6 +10,7 @@ export const appUser = pgTable('app_user', {
     .references(() => authUsers.id, {
       onDelete: 'cascade',
     }),
+  email: text('email').notNull(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   createdAt: timestamp('created_at', {

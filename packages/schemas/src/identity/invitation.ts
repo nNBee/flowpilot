@@ -6,3 +6,10 @@ export const createInvitationSchema = z.object({
 });
 
 export type CreateInvitationInput = z.infer<typeof createInvitationSchema>;
+
+export const acceptInvitationBodySchema = z.object({
+  firstName: z.string().trim().min(1),
+  lastName: z.string().trim().min(1),
+});
+
+export type AcceptInvitationBody = z.infer<typeof acceptInvitationBodySchema>;
