@@ -13,6 +13,9 @@ build/
 .env.*
 !.env.example
 
+# private local documentation
+/docs/
+
 # logs
 *.log
 npm-debug.log*
