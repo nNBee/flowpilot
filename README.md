@@ -61,6 +61,34 @@ flowpilot/
 └── ...
 ```
 
+## Development
+
+Install dependencies with:
+
+```bash
+pnpm install
+```
+
+Run the regular test suite with:
+
+```bash
+pnpm test
+```
+
+Database integration tests use a local Supabase PostgreSQL instance and require Docker:
+
+```bash
+make test-integration
+```
+
+The integration workflow starts the local database, resets it, applies the real migration chain, builds the database package, and runs the integration test suite.
+
+To stop the local Supabase database:
+
+```bash
+make test-db-stop
+```
+
 ## Current Status
 
 The project is under active development, with the backend currently being the primary focus.
