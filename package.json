@@ -23,5 +23,8 @@
     }
   },
   "packageManager": "pnpm@12.5.1",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "supabase": "2.119.0"
+  }
 }
