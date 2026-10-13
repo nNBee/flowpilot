@@ -1,6 +1,15 @@
 import type { FastifyPluginAsync } from 'fastify';
 import * as identityRoutes from './identity/index.js';
 
-export const routes: FastifyPluginAsync = async (app) => {
-  app.register(identityRoutes.invitationRoute);
+type RoutesOptions = {
+  webAppUrl: string;
+};
+
+export const routes: FastifyPluginAsync<RoutesOptions> = async (
+  app,
+  options,
+) => {
+  app.register(identityRoutes.invitationRoute, {
+    webAppUrl: options.webAppUrl,
+  });
 };

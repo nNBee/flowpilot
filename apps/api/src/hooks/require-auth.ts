@@ -1,12 +1,9 @@
-import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 
-export async function requireAuth(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+import { AppError } from '../errors/app-error.js';
+
+export async function requireAuth(request: FastifyRequest) {
   if (!request.user) {
-    return reply.code(401).send({
-      error: 'Unauthorized',
-    });
+    throw new AppError(401, 'unauthorized', 'Authentication is required.');
   }
 }

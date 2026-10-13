@@ -2,6 +2,7 @@ import Fastify, { type preHandlerHookHandler } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
 import { invitationRoute } from './invitation.js';
+import { AppError, appErrorHandler } from '../../errors/app-error.js';
 
 const businessId = '22222222-2222-4222-8222-222222222222';
 
@@ -13,16 +14,14 @@ const inviterRoleId = '55555555-5555-4555-8555-555555555555';
 
 const fakeInvitationId = '11111111-1111-4111-8111-111111111111';
 
-const unauthorized: preHandlerHookHandler = async (_request, reply) => {
-  return reply.code(401).send({
-    error: 'Unauthorized',
-  });
+const webAppUrl = 'https://app.example.com';
+
+const unauthorized: preHandlerHookHandler = async () => {
+  throw new AppError(401, 'unauthorized', 'Authentication is required.');
 };
 
-const forbidden: preHandlerHookHandler = async (_request, reply) => {
-  return reply.code(403).send({
-    error: 'Forbidden',
-  });
+const forbidden: preHandlerHookHandler = async () => {
+  throw new AppError(403, 'forbidden', 'Permission denied.');
 };
 
 const allowRequest: preHandlerHookHandler = async () => {};
@@ -62,9 +61,12 @@ async function buildTestApp({
 }: BuildTestAppOptions = {}) {
   const app = Fastify();
 
+  app.setErrorHandler(appErrorHandler);
+
   await app.register(invitationRoute, {
     createInvitation,
     acceptInvitation,
+    webAppUrl,
     requireAuth,
     requireBusinessMembership,
     requireInvitePermission,
@@ -118,6 +120,7 @@ describe('POST /business/:businessId/invitations', () => {
         email: 'test@example.com',
         invitedByUserId: userId,
         inviterRoleId,
+        webAppUrl,
       }),
     );
 
@@ -142,6 +145,12 @@ describe('POST /business/:businessId/invitations', () => {
     });
 
     expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({
+      error: {
+        code: 'unauthorized',
+        message: 'Authentication is required.',
+      },
+    });
     expect(fakeCreateInvitation).not.toHaveBeenCalled();
 
     await app.close();
@@ -165,6 +174,12 @@ describe('POST /business/:businessId/invitations', () => {
     });
 
     expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      error: {
+        code: 'forbidden',
+        message: 'Permission denied.',
+      },
+    });
     expect(fakeCreateInvitation).not.toHaveBeenCalled();
 
     await app.close();
@@ -188,6 +203,12 @@ describe('POST /business/:businessId/invitations', () => {
     });
 
     expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      error: {
+        code: 'forbidden',
+        message: 'Permission denied.',
+      },
+    });
     expect(fakeCreateInvitation).not.toHaveBeenCalled();
 
     await app.close();
@@ -210,6 +231,12 @@ describe('POST /business/:businessId/invitations', () => {
     });
 
     expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        code: 'invalid_request',
+        message: 'Invalid request.',
+      },
+    });
     expect(fakeCreateInvitation).not.toHaveBeenCalled();
 
     await app.close();
@@ -235,6 +262,12 @@ describe('POST /business/:businessId/invitations', () => {
     });
 
     expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        code: 'role_not_found',
+        message: 'Invalid role.',
+      },
+    });
     expect(fakeCreateInvitation).toHaveBeenCalledTimes(1);
     expect(fakeCreateInvitation).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -269,7 +302,10 @@ describe('POST /business/:businessId/invitations', () => {
     expect(response.statusCode).toBe(409);
 
     expect(response.json()).toEqual({
-      error: 'Invitation already exists',
+      error: {
+        code: 'invitation_already_exists',
+        message: 'An active invitation already exists.',
+      },
     });
 
     expect(fakeCreateInvitation).toHaveBeenCalledTimes(1);
@@ -299,7 +335,10 @@ describe('POST /business/:businessId/invitations', () => {
     expect(response.statusCode).toBe(409);
 
     expect(response.json()).toEqual({
-      error: 'User is already a member',
+      error: {
+        code: 'user_already_member',
+        message: 'This user is already a member of the business.',
+      },
     });
 
     expect(fakeCreateInvitation).toHaveBeenCalledTimes(1);
@@ -329,9 +368,43 @@ describe('POST /business/:businessId/invitations', () => {
     expect(response.statusCode).toBe(403);
 
     expect(response.json()).toEqual({
-      error: 'Forbidden',
+      error: {
+        code: 'role_not_assignable',
+        message: 'You are not allowed to assign this role.',
+      },
     });
 
+    expect(fakeCreateInvitation).toHaveBeenCalledTimes(1);
+
+    await app.close();
+  });
+
+  it('returns 403 when the inviter role is invalid', async () => {
+    const fakeCreateInvitation = vi.fn().mockResolvedValue({
+      ok: false,
+      reason: 'inviter_role_not_found',
+    });
+
+    const app = await buildTestApp({
+      createInvitation: fakeCreateInvitation,
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/business/${businessId}/invitations`,
+      payload: {
+        email: 'test@example.com',
+        roleId,
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      error: {
+        code: 'inviter_role_not_found',
+        message: 'You are not allowed to create this invitation.',
+      },
+    });
     expect(fakeCreateInvitation).toHaveBeenCalledTimes(1);
 
     await app.close();
@@ -423,6 +496,12 @@ describe('POST /invitations/:invitationId/accept', () => {
     });
 
     expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({
+      error: {
+        code: 'unauthorized',
+        message: 'Authentication is required.',
+      },
+    });
     expect(fakeAcceptInvitation).not.toHaveBeenCalled();
 
     await app.close();
@@ -446,7 +525,10 @@ describe('POST /invitations/:invitationId/accept', () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
-      error: 'Invalid request',
+      error: {
+        code: 'invalid_request',
+        message: 'Invalid request.',
+      },
     });
 
     expect(fakeAcceptInvitation).not.toHaveBeenCalled();
@@ -472,7 +554,10 @@ describe('POST /invitations/:invitationId/accept', () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
-      error: 'Invalid request',
+      error: {
+        code: 'invalid_request',
+        message: 'Invalid request.',
+      },
     });
 
     expect(fakeAcceptInvitation).not.toHaveBeenCalled();
@@ -507,7 +592,10 @@ describe('POST /invitations/:invitationId/accept', () => {
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
-      error: 'Forbidden',
+      error: {
+        code: 'user_email_required',
+        message: 'An authenticated email address is required.',
+      },
     });
 
     expect(fakeAcceptInvitation).not.toHaveBeenCalled();
@@ -516,17 +604,25 @@ describe('POST /invitations/:invitationId/accept', () => {
   });
 
   it.each([
-    ['invitation_not_found', 404, 'Invitation not found'],
-    ['invitation_revoked', 410, 'Invitation is no longer available'],
-    ['invitation_expired', 410, 'Invitation is no longer available'],
-    ['invitation_email_mismatch', 403, 'Forbidden'],
-    ['invitation_already_accepted', 409, 'Invitation already accepted'],
+    ['invitation_not_found', 404, 'Invitation not found.'],
+    ['invitation_revoked', 410, 'This invitation has been revoked.'],
+    ['invitation_expired', 410, 'This invitation has expired.'],
+    ['invitation_email_mismatch', 403, 'You cannot accept this invitation.'],
+    [
+      'invitation_already_accepted',
+      409,
+      'This invitation has already been accepted.',
+    ],
     [
       'invitation_no_longer_available',
       409,
-      'Invitation is no longer available',
+      'This invitation is no longer available.',
     ],
-    ['user_already_member', 409, 'User is already a member'],
+    [
+      'user_already_member',
+      409,
+      'This user is already a member of the business.',
+    ],
   ] as const)(
     'maps %s to HTTP %i',
     async (reason, expectedStatus, expectedError) => {
@@ -550,7 +646,10 @@ describe('POST /invitations/:invitationId/accept', () => {
 
       expect(response.statusCode).toBe(expectedStatus);
       expect(response.json()).toEqual({
-        error: expectedError,
+        error: {
+          code: reason,
+          message: expectedError,
+        },
       });
 
       expect(fakeAcceptInvitation).toHaveBeenCalledTimes(1);

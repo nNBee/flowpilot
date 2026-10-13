@@ -2,6 +2,7 @@ import Fastify, { type FastifyPluginAsync } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 import fp from 'fastify-plugin';
 import authPlugin from './auth.js';
+import { appErrorHandler } from '../errors/app-error.js';
 
 const fakeUser = {
   id: 'user-123',
@@ -35,6 +36,8 @@ async function buildTestApp(
   supabasePlugin: FastifyPluginAsync = createFakeSupabasePlugin(),
 ) {
   const app = Fastify();
+
+  app.setErrorHandler(appErrorHandler);
 
   await app.register(supabasePlugin);
   await app.register(authPlugin);
@@ -83,7 +86,10 @@ describe('authPlugin', () => {
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
-      error: 'Unauthorized',
+      error: {
+        code: 'unauthorized',
+        message: 'Authentication is required.',
+      },
     });
 
     await app.close();

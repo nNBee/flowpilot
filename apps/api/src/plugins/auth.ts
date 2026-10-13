@@ -1,9 +1,10 @@
 import fp from 'fastify-plugin';
+import { AppError } from '../errors/app-error.js';
 
 export default fp(async function authPlugin(app) {
   app.decorateRequest('user', null);
 
-  app.addHook('preHandler', async (request, reply) => {
+  app.addHook('preHandler', async (request) => {
     const authorization = request.headers.authorization;
 
     if (!authorization?.startsWith('Bearer ')) {
@@ -18,9 +19,7 @@ export default fp(async function authPlugin(app) {
     } = await app.supabase.auth.getUser(token);
 
     if (error || !user) {
-      return reply.code(401).send({
-        error: 'Unauthorized',
-      });
+      throw new AppError(401, 'unauthorized', 'Authentication is required.');
     }
 
     request.user = user;

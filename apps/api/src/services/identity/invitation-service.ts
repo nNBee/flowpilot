@@ -28,6 +28,7 @@ type CreateInvitationParams = {
   roleId: string;
   email: string;
   invitedByUserId: string;
+  webAppUrl: string;
   logger?: Logger;
 };
 
@@ -62,6 +63,7 @@ export async function createInvitation({
   roleId,
   email,
   invitedByUserId,
+  webAppUrl,
   logger,
 }: CreateInvitationParams) {
   const normalizedEmail = email.trim().toLowerCase();
@@ -191,9 +193,12 @@ export async function createInvitation({
 
     //MARK: Send Supabase invitation
     try {
-      const { error } =
-        await supabase.auth.admin.inviteUserByEmail(normalizedEmail);
-
+      const { error } = await supabase.auth.admin.inviteUserByEmail(
+        normalizedEmail,
+        {
+          redirectTo: `${webAppUrl}/invitations/${createdInvitation.id}/accept`,
+        },
+      );
       if (error) {
         throw new Error('SUPABASE_INVITE_FAILED');
       }

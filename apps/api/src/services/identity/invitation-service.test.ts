@@ -9,6 +9,8 @@ const roleId = '33333333-3333-4333-8333-333333333333';
 const userId = '44444444-4444-4444-8444-444444444444';
 const inviterRoleId = '55555555-5555-4555-8555-555555555555';
 const invitationId = '11111111-1111-4111-8111-111111111111';
+const webAppUrl = 'https://app.example.com';
+const invitationRedirectTo = `${webAppUrl}/invitations/${invitationId}/accept`;
 
 function buildSelectMock(...queryResults: ReadonlyArray<readonly unknown[]>) {
   const limit = vi.fn();
@@ -77,6 +79,7 @@ describe('createInvitation', () => {
       roleId,
       email: '  TEST@EXAMPLE.COM ',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -94,7 +97,9 @@ describe('createInvitation', () => {
     );
 
     expect(inviteUserByEmail).toHaveBeenCalledTimes(1);
-    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com');
+    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com', {
+      redirectTo: invitationRedirectTo,
+    });
   });
 
   it('returns role_not_found when the role does not belong to the business', async () => {
@@ -125,6 +130,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -164,6 +170,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -222,6 +229,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -280,6 +288,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -338,6 +347,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -410,6 +420,7 @@ describe('createInvitation', () => {
         roleId,
         email: 'test@example.com',
         invitedByUserId: userId,
+        webAppUrl,
       });
 
       expect.fail('Expected createInvitation to throw');
@@ -423,7 +434,9 @@ describe('createInvitation', () => {
     }
 
     expect(inviteUserByEmail).toHaveBeenCalledTimes(1);
-    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com');
+    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com', {
+      redirectTo: invitationRedirectTo,
+    });
 
     expect(deleteFn).toHaveBeenCalledTimes(1);
     expect(deleteWhere).toHaveBeenCalledTimes(1);
@@ -460,6 +473,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -514,6 +528,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -582,10 +597,14 @@ describe('createInvitation', () => {
         roleId,
         email: 'test@example.com',
         invitedByUserId: userId,
+        webAppUrl,
       }),
     ).rejects.toThrow('Failed to send invitation');
 
     expect(inviteUserByEmail).toHaveBeenCalledTimes(1);
+    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com', {
+      redirectTo: invitationRedirectTo,
+    });
 
     expect(deleteFn).toHaveBeenCalledTimes(1);
     expect(deleteWhere).toHaveBeenCalledTimes(1);
@@ -653,12 +672,17 @@ describe('createInvitation', () => {
         roleId,
         email: 'test@example.com',
         invitedByUserId: userId,
+        webAppUrl,
         logger,
       }),
     ).rejects.toThrow('Failed to send invitation');
 
     expect(deleteFn).toHaveBeenCalledTimes(1);
     expect(deleteWhere).toHaveBeenCalledTimes(1);
+    expect(inviteUserByEmail).toHaveBeenCalledTimes(1);
+    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com', {
+      redirectTo: invitationRedirectTo,
+    });
     expect(logger.error).toHaveBeenCalledTimes(1);
 
     expect(logger.error).toHaveBeenCalledWith(
@@ -736,6 +760,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(update).toHaveBeenCalledTimes(1);
@@ -744,7 +769,9 @@ describe('createInvitation', () => {
     });
 
     expect(insert).toHaveBeenCalledTimes(1);
-    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com');
+    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com', {
+      redirectTo: invitationRedirectTo,
+    });
 
     expect(result).toEqual({
       ok: true,
@@ -808,6 +835,7 @@ describe('createInvitation', () => {
       roleId,
       email: 'test@example.com',
       invitedByUserId: userId,
+      webAppUrl,
     });
 
     expect(result).toEqual({
@@ -816,7 +844,9 @@ describe('createInvitation', () => {
     });
 
     expect(insert).toHaveBeenCalledTimes(1);
-    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com');
+    expect(inviteUserByEmail).toHaveBeenCalledWith('test@example.com', {
+      redirectTo: invitationRedirectTo,
+    });
   });
 
   it('rethrows a 23505 error from a different constraint', async () => {
@@ -862,6 +892,7 @@ describe('createInvitation', () => {
         roleId,
         email: 'test@example.com',
         invitedByUserId: userId,
+        webAppUrl,
       }),
     ).rejects.toBe(databaseError);
   });

@@ -12,10 +12,12 @@ import {
   acceptInvitation,
   createInvitation,
 } from '../../services/identity/invitation-service.js';
+import { AppError } from '../../errors/app-error.js';
 
 type InvitationRouteOptions = {
   acceptInvitation?: typeof acceptInvitation;
   createInvitation?: typeof createInvitation;
+  webAppUrl: string;
   requireAuth?: preHandlerHookHandler;
   requireBusinessMembership?: preHandlerHookHandler;
   requireInvitePermission?: preHandlerHookHandler;
@@ -51,9 +53,7 @@ export const invitationRoute: FastifyPluginAsync<
       const bodyResult = createInvitationSchema.safeParse(request.body);
 
       if (!paramsResult.success || !bodyResult.success) {
-        return reply.code(400).send({
-          error: 'Invalid request',
-        });
+        throw new AppError(400, 'invalid_request', 'Invalid request.');
       }
 
       const { businessId } = paramsResult.data;
@@ -67,30 +67,42 @@ export const invitationRoute: FastifyPluginAsync<
         roleId,
         email,
         invitedByUserId: request.user!.id,
+        webAppUrl: options.webAppUrl,
         logger: request.log,
       });
 
       if (!result.ok) {
         switch (result.reason) {
           case 'role_not_found':
-            return reply.code(400).send({
-              error: 'Invalid role',
-            });
+            throw new AppError(400, 'role_not_found', 'Invalid role.');
 
           case 'inviter_role_not_found':
+            throw new AppError(
+              403,
+              'inviter_role_not_found',
+              'You are not allowed to create this invitation.',
+            );
+
           case 'role_not_assignable':
-            return reply.code(403).send({
-              error: 'Forbidden',
-            });
+            throw new AppError(
+              403,
+              'role_not_assignable',
+              'You are not allowed to assign this role.',
+            );
 
           case 'invitation_already_exists':
-            return reply.code(409).send({
-              error: 'Invitation already exists',
-            });
+            throw new AppError(
+              409,
+              'invitation_already_exists',
+              'An active invitation already exists.',
+            );
+
           case 'user_already_member':
-            return reply.code(409).send({
-              error: 'User is already a member',
-            });
+            throw new AppError(
+              409,
+              'user_already_member',
+              'This user is already a member of the business.',
+            );
         }
       }
 
@@ -113,23 +125,21 @@ export const invitationRoute: FastifyPluginAsync<
       const bodyResult = acceptInvitationBodySchema.safeParse(request.body);
 
       if (!paramsResult.success || !bodyResult.success) {
-        return reply.code(400).send({
-          error: 'Invalid request',
-        });
+        throw new AppError(400, 'invalid_request', 'Invalid request.');
       }
 
       const user = request.user;
 
       if (!user) {
-        return reply.code(401).send({
-          error: 'Unauthorized',
-        });
+        throw new AppError(401, 'unauthorized', 'Authentication is required.');
       }
 
       if (!user.email) {
-        return reply.code(403).send({
-          error: 'Forbidden',
-        });
+        throw new AppError(
+          403,
+          'user_email_required',
+          'An authenticated email address is required.',
+        );
       }
 
       const { invitationId } = paramsResult.data;
@@ -149,35 +159,53 @@ export const invitationRoute: FastifyPluginAsync<
 
         switch (reason) {
           case 'invitation_not_found':
-            return reply.code(404).send({
-              error: 'Invitation not found',
-            });
+            throw new AppError(
+              404,
+              'invitation_not_found',
+              'Invitation not found.',
+            );
 
           case 'invitation_revoked':
+            throw new AppError(
+              410,
+              'invitation_revoked',
+              'This invitation has been revoked.',
+            );
+
           case 'invitation_expired':
-            return reply.code(410).send({
-              error: 'Invitation is no longer available',
-            });
+            throw new AppError(
+              410,
+              'invitation_expired',
+              'This invitation has expired.',
+            );
 
           case 'invitation_email_mismatch':
-            return reply.code(403).send({
-              error: 'Forbidden',
-            });
+            throw new AppError(
+              403,
+              'invitation_email_mismatch',
+              'You cannot accept this invitation.',
+            );
 
           case 'invitation_already_accepted':
-            return reply.code(409).send({
-              error: 'Invitation already accepted',
-            });
+            throw new AppError(
+              409,
+              'invitation_already_accepted',
+              'This invitation has already been accepted.',
+            );
 
           case 'invitation_no_longer_available':
-            return reply.code(409).send({
-              error: 'Invitation is no longer available',
-            });
+            throw new AppError(
+              409,
+              'invitation_no_longer_available',
+              'This invitation is no longer available.',
+            );
 
           case 'user_already_member':
-            return reply.code(409).send({
-              error: 'User is already a member',
-            });
+            throw new AppError(
+              409,
+              'user_already_member',
+              'This user is already a member of the business.',
+            );
 
           default: {
             const unhandledReason: never = reason;

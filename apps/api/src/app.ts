@@ -8,6 +8,11 @@ import authPlugin from './plugins/auth.js';
 import type { Config } from './config.js';
 import membershipContextPlugin from './plugins/membership-context.js';
 import { routes } from './routes/index.js';
+import {
+  appErrorHandler,
+  createApiErrorResponse,
+} from './errors/app-error.js';
+
 type BuildAppOptions = {
   config: Config;
   databasePlugin?: FastifyPluginAsync;
@@ -23,6 +28,13 @@ export function buildApp({
     logger: true,
   });
 
+  app.setErrorHandler(appErrorHandler);
+  app.setNotFoundHandler((_request, reply) => {
+    return reply
+      .code(404)
+      .send(createApiErrorResponse('route_not_found', 'Route not found.'));
+  });
+
   app.register(databasePluginOverride ?? databasePlugin(config.DATABASE_URL));
   app.register(supabasePluginOverride ?? supabasePlugin, {
     config,
@@ -30,7 +42,9 @@ export function buildApp({
   app.register(authPlugin);
   app.register(membershipContextPlugin);
 
-  app.register(routes);
+  app.register(routes, {
+    webAppUrl: config.WEB_APP_URL,
+  });
 
   app.get('/health', async () => {
     return {

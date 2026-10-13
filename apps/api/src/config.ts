@@ -11,6 +11,8 @@ const envSchema = z.object({
 
   SUPABASE_URL: z.url(),
   SUPABASE_SECRET_KEY: z.string().min(1),
+
+  WEB_APP_URL: z.url(),
 });
 
 export function parseConfig(env: NodeJS.ProcessEnv) {
