@@ -1,16 +1,26 @@
 import { acceptInvitationBodySchema } from '@flowpilot/schemas';
+import type { TFunction } from 'i18next';
 import { z } from 'zod';
 
-export const acceptInvitationFormSchema = acceptInvitationBodySchema
-  .extend({
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ['confirmPassword'],
-    message: 'Passwords do not match',
-  });
+export function createAcceptInvitationFormSchema(t: TFunction) {
+  return acceptInvitationBodySchema
+    .extend({
+      firstName: z.string().trim().min(1, t('invitation.firstNameRequired')),
+
+      lastName: z.string().trim().min(1, t('invitation.lastNameRequired')),
+
+      password: z.string().min(8, t('invitation.passwordMinLength')),
+
+      confirmPassword: z
+        .string()
+        .min(1, t('validation.confirmPasswordRequired')),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('invitation.passwordMismatch'),
+      path: ['confirmPassword'],
+    });
+}
 
 export type AcceptInvitationFormValues = z.infer<
-  typeof acceptInvitationFormSchema
+  ReturnType<typeof createAcceptInvitationFormSchema>
 >;

@@ -2,6 +2,7 @@ import {
   apiErrorResponseSchema,
   type ApiErrorResponse,
 } from '@flowpilot/schemas';
+import { config } from '../../config';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -35,7 +36,7 @@ export async function apiRequest(
   let response: Response;
 
   try {
-    response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, options);
+    response = await fetch(`${config.apiUrl}${path}`, options);
   } catch {
     throw new ApiError(
       0,

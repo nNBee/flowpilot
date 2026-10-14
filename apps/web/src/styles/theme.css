@@ -1,0 +1,30 @@
+@theme inline {
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: var(--fp-primary);
+  --color-primary-hover: var(--fp-primary-hover);
+  --color-primary-subtle: var(--fp-primary-subtle);
+  --color-primary-foreground: var(--fp-primary-foreground);
+
+  --color-background: var(--fp-background);
+  --color-surface: var(--fp-surface);
+  --color-surface-hover: var(--fp-surface-hover);
+
+  --color-foreground: var(--fp-foreground);
+  --color-foreground-secondary: var(--fp-foreground-secondary);
+  --color-foreground-muted: var(--fp-foreground-muted);
+
+  --color-border: var(--fp-border);
+  --color-border-strong: var(--fp-border-strong);
+
+  --color-sidebar: var(--fp-sidebar);
+  --color-sidebar-hover: var(--fp-sidebar-hover);
+  --color-sidebar-foreground: var(--fp-sidebar-foreground);
+
+  --color-success: var(--fp-success);
+  --color-warning: var(--fp-warning);
+  --color-danger: var(--fp-danger);
+  --color-info: var(--fp-info);
+
+  --color-focus-ring: var(--fp-focus-ring);
+}

@@ -1,7 +1,12 @@
 TEST_DATABASE_URL := postgresql://postgres:postgres@127.0.0.1:54322/postgres
 export TEST_DATABASE_URL
 
-.PHONY: test-db-start test-db-reset test-db-migrate test-db-stop test-integration-prepare test-integration
+.PHONY: dev-api dev-web test-db-start test-db-reset test-db-migrate test-db-stop test-integration-prepare test-integration
+dev-api:
+	pnpm --filter @flowpilot/api dev
+
+dev-web:
+	pnpm --filter @flowpilot/web dev
 
 test-db-start:
 	pnpm supabase db start
