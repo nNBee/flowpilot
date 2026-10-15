@@ -9,14 +9,14 @@ export function createAcceptInvitationFormSchema(t: TFunction) {
 
       lastName: z.string().trim().min(1, t('invitation.lastNameRequired')),
 
-      password: z.string().min(8, t('invitation.passwordMinLength')),
+      password: z.string().min(8, t('validation.passwordMinLength')),
 
       confirmPassword: z
         .string()
         .min(1, t('validation.confirmPasswordRequired')),
     })
     .refine((data) => data.password === data.confirmPassword, {
-      message: t('invitation.passwordMismatch'),
+      message: t('validation.passwordMismatch'),
       path: ['confirmPassword'],
     });
 }

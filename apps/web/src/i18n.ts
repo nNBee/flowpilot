@@ -3,8 +3,8 @@ import { config } from './config';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import { en } from './locales/en/translation';
-import { hu } from './locales/hu/translation';
+import { en } from './locales/en';
+import { hu } from './locales/hu';
 
 export const supportedLocales = ['en', 'hu'] as const;
 
